@@ -217,3 +217,6 @@ async function cloudRequest(path,options={}){const r=await fetch(`${cloudUrl}${p
 function mapCloudPaper(r){return{id:r.id,studentName:r.student_name,studentPhone:r.student_phone,name:'408 计算机考试试卷',uploadedAt:new Date(r.created_at).toLocaleString('zh-CN',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'}),type:r.mime_type==='application/pdf'?'pdf':'image',mimeType:r.mime_type,status:r.status,choice:r.choice_scores||[],big:r.big_scores||[],score:+r.score||0,comment:r.comment||'',strokes:r.strokes||[],preview:`${cloudUrl}/storage/v1/object/public/paper-files/${r.file_path.split('/').map(encodeURIComponent).join('/')}`,filePath:r.file_path,filePaths:r.file_paths?.length?r.file_paths:[r.file_path],deletedAt:r.deleted_at}}
 async function loadCloud(){try{const rows=await cloudRequest('/rest/v1/papers?select=*&order=created_at.desc');state={papers:rows.map(mapCloudPaper),trash:[]};render()}catch(error){console.error(error);toast('云端数据读取失败，请刷新重试')}}
 setTimeout(()=>loadCloud(),0);
+// 上传失败时显示 Supabase 的原始摘要，避免通用提示掩盖真实原因。
+const originalConsoleError=console.error.bind(console);
+console.error=(error,...rest)=>{originalConsoleError(error,...rest);const message=String(error?.message||error||'未知错误').replace(/\s+/g,' ').slice(0,150);if(message&&message!=='未知错误')setTimeout(()=>toast(`上传错误：${message}`),0)};
