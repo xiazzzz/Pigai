@@ -21,6 +21,9 @@ create table if not exists public.papers (
   graded_at timestamptz
 );
 
+-- 兼容已执行过早期脚本的项目：一份试卷可包含多张图片或多个文件。
+alter table public.papers add column if not exists file_paths jsonb not null default '[]'::jsonb;
+
 create index if not exists papers_active_created_at_idx on public.papers (created_at desc) where deleted_at is null;
 alter table public.papers enable row level security;
 
