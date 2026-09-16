@@ -69,7 +69,9 @@ loadCloud();
 
 // 多图试卷：同一次提交的图片归入同一份试卷，教师可逐页查看。
 $('#fileInput').multiple=true;
-$('#fileInput').onchange=e=>{const files=[...e.target.files];$('#fileName').textContent=files.length?`${files.length} 个文件已选择：${files.map(f=>f.name).join('、')}`:'尚未选择文件'};
+$('#dropZone').querySelector('strong').textContent='点击或拖放多张试卷照片至此处';
+$('#dropZone').querySelector('small').textContent='支持多张 JPG、PNG、PDF；每个文件不超过 20MB';
+$('#fileInput').onchange=e=>{const files=[...e.target.files];$('#fileName').textContent=files.length?`已选择 ${files.length} 个文件`:'尚未选择文件';let list=$('#filePreviewList');if(!list){list=document.createElement('div');list.id='filePreviewList';list.className='file-preview-list';$('#dropZone').append(list)}list.innerHTML='';files.forEach((file,index)=>{const card=document.createElement('figure');card.className='file-preview-card';if(file.type.startsWith('image/')){const image=document.createElement('img');image.src=URL.createObjectURL(file);image.onload=()=>URL.revokeObjectURL(image.src);card.append(image)}else{card.innerHTML='<span class="file-preview-pdf">PDF</span>'}const caption=document.createElement('figcaption');caption.textContent=`第 ${index+1} 页 · ${file.name}`;card.append(caption);list.append(card)})};
 const cloudPaperBase=cloudPaper;
 cloudPaper=r=>{const p=cloudPaperBase(r);p.filePaths=(r.file_paths&&r.file_paths.length?r.file_paths:[r.file_path]);p.preview=cloudFileUrl(p.filePaths[0]);return p};
 const selectOnePaper=select;
