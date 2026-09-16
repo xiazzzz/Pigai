@@ -209,3 +209,11 @@ results=function(){$('#resultList').innerHTML=graded().map(p=>`<article class="r
 $('.user-avatar').textContent='夏';$('.sidebar-bottom strong').textContent='夏老师';render();
 
 
+// 全局云端连接：学生上传与教师工作台都使用此配置。
+var cloudUrl='https://lmrfbmclyebmyezqphrv.supabase.co';
+var cloudKey='sb_publishable_ZCuA-E7cQkV6M09wQWtlQA_T1sNzpJ5';
+var cloudHeaders={apikey:cloudKey,Authorization:`Bearer ${cloudKey}`};
+async function cloudRequest(path,options={}){const r=await fetch(`${cloudUrl}${path}`,{...options,headers:{...cloudHeaders,...(options.headers||{})}});if(!r.ok)throw new Error(await r.text());return r.status===204?null:r.json()}
+function mapCloudPaper(r){return{id:r.id,studentName:r.student_name,studentPhone:r.student_phone,name:'408 计算机考试试卷',uploadedAt:new Date(r.created_at).toLocaleString('zh-CN',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'}),type:r.mime_type==='application/pdf'?'pdf':'image',mimeType:r.mime_type,status:r.status,choice:r.choice_scores||[],big:r.big_scores||[],score:+r.score||0,comment:r.comment||'',strokes:r.strokes||[],preview:`${cloudUrl}/storage/v1/object/public/paper-files/${r.file_path.split('/').map(encodeURIComponent).join('/')}`,filePath:r.file_path,filePaths:r.file_paths?.length?r.file_paths:[r.file_path],deletedAt:r.deleted_at}}
+async function loadCloud(){try{const rows=await cloudRequest('/rest/v1/papers?select=*&order=created_at.desc');state={papers:rows.map(mapCloudPaper),trash:[]};render()}catch(error){console.error(error);toast('云端数据读取失败，请刷新重试')}}
+setTimeout(()=>loadCloud(),0);
