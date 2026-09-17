@@ -27,20 +27,33 @@ alter table public.papers add column if not exists file_paths jsonb not null def
 create index if not exists papers_active_created_at_idx on public.papers (created_at desc) where deleted_at is null;
 alter table public.papers enable row level security;
 
--- 试运行策略：学生可提交；网页内的教师演示入口可读取、批改、移入回收站和恢复。
--- 注意：正式上线前请移除这些策略，改为 Supabase Auth + 教师角色策略。
+-- 仅指定教师 Auth 账号具有读取、批改、恢复与彻底删除权限。
+create or replace function public.is_teacher()
+returns boolean language sql stable security definer set search_path = public
+as $$ select coalesce(auth.jwt() ->> 'email', '') = 'teacher@xia.college' $$;
+
 drop policy if exists "trial submit papers" on public.papers;
 drop policy if exists "trial read papers" on public.papers;
 drop policy if exists "trial update papers" on public.papers;
-create policy "trial submit papers" on public.papers for insert to anon with check (true);
-create policy "trial read papers" on public.papers for select to anon using (true);
-create policy "trial update papers" on public.papers for update to anon using (true) with check (true);
+drop policy if exists "trial delete papers" on public.papers;
+drop policy if exists "demo read papers" on public.papers;
+drop policy if exists "demo write papers" on public.papers;
+drop policy if exists "demo update papers" on public.papers;
+create policy "student submit papers" on public.papers for insert to anon with check (true);
+create policy "teacher read papers" on public.papers for select to authenticated using (public.is_teacher());
+create policy "teacher update papers" on public.papers for update to authenticated using (public.is_teacher()) with check (public.is_teacher());
+create policy "teacher delete papers" on public.papers for delete to authenticated using (public.is_teacher());
 
 insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
 values ('paper-files', 'paper-files', true, 20971520, array['image/jpeg','image/png','image/webp','application/pdf'])
-on conflict (id) do update set public = true, file_size_limit = 20971520;
+on conflict (id) do update set public = false, file_size_limit = 20971520;
 
 drop policy if exists "trial upload paper files" on storage.objects;
 drop policy if exists "trial read paper files" on storage.objects;
-create policy "trial upload paper files" on storage.objects for insert to anon with check (bucket_id = 'paper-files');
-create policy "trial read paper files" on storage.objects for select to anon using (bucket_id = 'paper-files');
+drop policy if exists "trial delete paper files" on storage.objects;
+drop policy if exists "student upload paper files" on storage.objects;
+drop policy if exists "teacher read paper files" on storage.objects;
+drop policy if exists "teacher delete paper files" on storage.objects;
+create policy "student upload paper files" on storage.objects for insert to anon with check (bucket_id = 'paper-files');
+create policy "teacher read paper files" on storage.objects for select to authenticated using (bucket_id = 'paper-files' and public.is_teacher());
+create policy "teacher delete paper files" on storage.objects for delete to authenticated using (bucket_id = 'paper-files' and public.is_teacher());
