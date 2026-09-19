@@ -161,3 +161,4 @@ input:focus,textarea:focus{outline:2px solid #b6c3ff}
 
 
 .file-preview-list{display:flex;gap:10px;overflow-x:auto;margin-top:12px;padding:2px}.file-preview-card{flex:0 0 104px;margin:0;text-align:left}.file-preview-card img,.file-preview-pdf{width:104px;height:76px;display:block;object-fit:cover;border-radius:8px;border:1px solid #dbe3f4;background:#fff}.file-preview-pdf{display:grid;place-items:center;color:#e44b55;font-weight:800}.file-preview-card figcaption{margin-top:5px;font-size:11px;line-height:1.35;color:#63729b;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.paper-page-controls{display:flex;align-items:center;justify-content:center;gap:12px;padding:14px;background:#fff;border-top:1px solid #e8ecf5}.paper-page-controls strong{font-size:13px;color:#53617d;min-width:72px;text-align:center}
