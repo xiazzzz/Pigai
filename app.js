@@ -247,3 +247,5 @@ queue=()=>{const ps=pending();$('#queueCount').textContent=ps.length+' 份';$('#
 render();
 // 以 deleted_at 为准筛选批改中心，确保移入回收站后立即从列表消失。
 setTimeout(()=>{queue=()=>{const ps=state.papers.filter(p=>p.status==='pending'&&!p.deletedAt);$('#queueCount').textContent=ps.length+' 份';$('#gradingQueue').innerHTML=ps.map(p=>`<div class="queue-entry"><button class="queue-item ${p.id===selectedId?'active':''}" data-open="${p.id}"><strong>${esc(p.studentName)} · 408 试卷</strong><small>${esc(p.studentPhone)} · ${esc(p.uploadedAt)}</small></button><button class="queue-delete" data-delete="${p.id}" title="删除试卷">🗑</button></div>`).join('')||'<p class="empty-note">暂无待批改试卷</p>';$$('[data-open]').forEach(b=>b.onclick=()=>select(b.dataset.open));$$('[data-delete]').forEach(b=>b.onclick=()=>moveToTrash(b.dataset.delete))};render()},0);
+// 所有待批改计数均排除回收站试卷，保持批改中心、侧栏与总览同步。
+setTimeout(()=>{const baseRender=render;render=()=>{baseRender();const activePending=state.papers.filter(p=>p.status==='pending'&&!p.deletedAt).length;$('#pendingCount').textContent=activePending;$('#pendingBadge').textContent=activePending;$('#queueCount').textContent=activePending+' 份';queue()};render()},10);
